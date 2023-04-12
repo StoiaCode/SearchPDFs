@@ -29,6 +29,11 @@ class SearchPDFs {
 		string directory = string.Empty;
 		string outputDir = string.Empty;
 
+		double count = 0;
+		int found = 0;
+		int errCount = 0;
+		int maxErr = 10;
+
 		while (directory.Equals(string.Empty)) {
 			Console.Write("Input the Directory to scan in: ");
 			directory = Console.ReadLine();
@@ -47,29 +52,67 @@ class SearchPDFs {
 		}
 
 		StreamWriter saveFile = new StreamWriter(outputDir);
-		List<string> found = new List<string>();
 
 		try {
-			foreach (string file in Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories)) {
-				PdfDocument pdf = new PdfDocument(new PdfReader(file));
+			var files = Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories);
 
-				for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
-					var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
-					if (pageText.Contains(toBeFound)) {
-						Console.WriteLine($"Found a file at: {file}");
-						found.Add(file);
-						saveFile.WriteLine(file);
+			Console.WriteLine($"Scanning {files.Count()} .pdfs. Starting Work...");
+
+			double divisor = Math.Pow(10, (int)Math.Log10(files.Count()) + 1);
+			double formattedNumber = 1 - (Math.Round(files.Count() / divisor, 2));
+			count = formattedNumber;
+
+			using (var progress = new ProgressBar()) {
+				foreach (string file in files) {
+					try {
+						PdfDocument pdf = new PdfDocument(new PdfReader(file));
+
+						for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
+							var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
+							if (pageText.Contains(toBeFound)) {
+								Console.WriteLine($"Found a file at: {file}");
+								saveFile.WriteLine(file);
+								found++;
+							}
+						}
+
+						progress.Report(count);
+						count--;
+
+					} catch (Exception e) {
+						errCount++;
+						Console.WriteLine($"Error: {e}");
+						Console.WriteLine($"At file: {file}");
+
+						if (errCount > maxErr) {
+							Console.WriteLine($"We had {errCount} Errors, something is off. Continue? (Y)es/(N)o");
+							var shouldCont = Console.ReadKey(true);
+
+							if (shouldCont.Equals('y')) {
+								maxErr += 10;
+								Console.WriteLine("Continue...");
+								continue;
+							} else {
+								throw;
+							}
+
+						} else {
+							Console.WriteLine("Continue...");
+							continue;
+						}
 					}
 				}
 			}
 		} catch (Exception e) {
 			Console.WriteLine(e);
+			Console.WriteLine();
+			Console.WriteLine("Fuck. We crashed. Press Enter to exit. All found things _should_ still be saved!");
 			Console.ReadLine();
 		}
 
 		saveFile.Close();
 
-		Console.WriteLine($"There have been {found.Count} matches. You can finde them in {outputDir}. Press ENTER to close this window.");
+		Console.WriteLine($"There have been {found} matches. You can finde them in {outputDir}. Press ENTER to close this window.");
 		Console.ReadLine();
 	}
 }
