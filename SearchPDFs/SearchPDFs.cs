@@ -1,5 +1,6 @@
 ﻿using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Commons.Actions;
 
 
 /*	A simple tool that searches for text in all PDFs in a folder + Subdirectories.
@@ -20,6 +21,10 @@ using iText.Kernel.Pdf.Canvas.Parser;
  */
 class SearchPDFs {
 	static void Main() {
+
+		// Disable Warning
+		EventManager.AcknowledgeAgplUsageDisableWarningMessage();
+
 		string toBeFound = string.Empty;
 		string directory = string.Empty;
 		string outputDir = string.Empty;
