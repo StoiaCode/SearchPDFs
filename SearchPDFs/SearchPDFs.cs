@@ -57,49 +57,45 @@ class SearchPDFs {
 			var files = Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories);
 
 			Console.WriteLine($"Scanning {files.Count()} .pdfs. Starting Work...");
+			count = files.Count();
 
-			double divisor = Math.Pow(10, (int)Math.Log10(files.Count()) + 1);
-			double formattedNumber = 1 - (Math.Round(files.Count() / divisor, 2));
-			count = formattedNumber;
+			foreach (string file in files) {
 
-			using (var progress = new ProgressBar()) {
-				foreach (string file in files) {
-					try {
-						PdfDocument pdf = new PdfDocument(new PdfReader(file));
+				Console.Write($"\rWe have {count} pdfs left...");
+				try {
+					PdfDocument pdf = new PdfDocument(new PdfReader(file));
 
-						for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
-							var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
-							if (pageText.Contains(toBeFound)) {
-								Console.WriteLine($"Found a file at: {file}");
-								saveFile.WriteLine(file);
-								found++;
-							}
+					for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
+						var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
+						if (pageText.Contains(toBeFound)) {
+							Console.WriteLine($"\rFound a file at: {file}");
+							saveFile.WriteLine(file);
+							found++;
 						}
+					}
 
-						progress.Report(count);
-						count--;
+					count--;
 
-					} catch (Exception e) {
-						errCount++;
-						Console.WriteLine($"Error: {e}");
-						Console.WriteLine($"At file: {file}");
+				} catch (Exception e) {
+					errCount++;
+					Console.WriteLine($"Error: {e}");
+					Console.WriteLine($"At file: {file}");
 
-						if (errCount > maxErr) {
-							Console.WriteLine($"We had {errCount} Errors, something is off. Continue? (Y)es/(N)o");
-							var shouldCont = Console.ReadKey(true);
+					if (errCount > maxErr) {
+						Console.WriteLine($"We had {errCount} Errors, something is off. Continue? (Y)es/(N)o");
+						var shouldCont = Console.ReadKey(true);
 
-							if (shouldCont.Equals('y')) {
-								maxErr += 10;
-								Console.WriteLine("Continue...");
-								continue;
-							} else {
-								throw;
-							}
-
-						} else {
+						if (shouldCont.Equals('y')) {
+							maxErr += 10;
 							Console.WriteLine("Continue...");
 							continue;
+						} else {
+							throw;
 						}
+
+					} else {
+						Console.WriteLine("Continue...");
+						continue;
 					}
 				}
 			}
