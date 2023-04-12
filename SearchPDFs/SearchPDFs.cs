@@ -24,19 +24,25 @@ class SearchPDFs {
 			outputDir += "\\outputFile.txt";
 		}
 
-		List<String> found = new List<String>();
+		List<string> found = new List<string>();
 
-		foreach (string file in Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories)) {
-			PdfDocument pdf = new PdfDocument(new PdfReader(file));
+		try {
+			foreach (string file in Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories)) {
+				PdfDocument pdf = new PdfDocument(new PdfReader(file));
 
-			for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
-				var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
-				if (pageText.Contains(toBeFound)) {
-					Console.WriteLine(pageText);
-					found.Add(file);
+				for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
+					var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
+					if (pageText.Contains(toBeFound)) {
+						Console.WriteLine(pageText);
+						found.Add(file);
+					}
 				}
 			}
+		} catch (Exception e) {
+			Console.WriteLine(e);
+			throw;
 		}
+
 
 		StreamWriter saveFile = new StreamWriter(outputDir);
 		found.ForEach(saveFile.WriteLine);
