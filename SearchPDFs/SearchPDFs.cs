@@ -41,6 +41,7 @@ class SearchPDFs {
 			outputDir += "\\outputFile.txt";
 		}
 
+		StreamWriter saveFile = new StreamWriter(outputDir);
 		List<string> found = new List<string>();
 
 		try {
@@ -50,19 +51,17 @@ class SearchPDFs {
 				for (int i = 1;i <= pdf.GetNumberOfPages();i++) {
 					var pageText = PdfTextExtractor.GetTextFromPage(pdf.GetPage(i));
 					if (pageText.Contains(toBeFound)) {
-						Console.WriteLine(pageText);
+						Console.WriteLine($"Found a file at: {file}");
 						found.Add(file);
+						saveFile.WriteLine(file);
 					}
 				}
 			}
 		} catch (Exception e) {
 			Console.WriteLine(e);
-			throw;
+			Console.ReadLine();
 		}
 
-
-		StreamWriter saveFile = new StreamWriter(outputDir);
-		found.ForEach(saveFile.WriteLine);
 		saveFile.Close();
 
 		Console.WriteLine($"There have been {found.Count} matches. You can finde them in {outputDir}. Press ENTER to close this window.");
