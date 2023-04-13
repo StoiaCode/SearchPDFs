@@ -1,6 +1,7 @@
 ﻿using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Commons.Actions;
+using System.Collections.ObjectModel;
 
 
 /*	A simple tool that searches for text in all PDFs in a folder + Subdirectories.
@@ -53,6 +54,8 @@ class SearchPDFs {
 
 		StreamWriter saveFile = new StreamWriter(outputDir);
 
+		Dictionary<Exception, string> eList = new Dictionary<Exception, string>();
+
 		try {
 			var files = Directory.EnumerateFiles(directory, "*.pdf", SearchOption.AllDirectories);
 
@@ -73,6 +76,7 @@ class SearchPDFs {
 							found++;
 						}
 					}
+					pdf.Close();
 
 					count--;
 
@@ -80,23 +84,8 @@ class SearchPDFs {
 					errCount++;
 					Console.WriteLine($"Error: {e}");
 					Console.WriteLine($"At file: {file}");
-
-					if (errCount > maxErr) {
-						Console.WriteLine($"We had {errCount} Errors, something is off. Continue? (Y)es/(N)o");
-						var shouldCont = Console.ReadKey(true);
-
-						if (shouldCont.Equals('y')) {
-							maxErr += 10;
-							Console.WriteLine("Continue...");
-							continue;
-						} else {
-							throw;
-						}
-
-					} else {
-						Console.WriteLine("Continue...");
-						continue;
-					}
+					eList.Add(e, file);
+					continue;
 				}
 			}
 		} catch (Exception e) {
@@ -106,9 +95,19 @@ class SearchPDFs {
 			Console.ReadLine();
 		}
 
-		saveFile.Close();
 
 		Console.WriteLine($"There have been {found} matches. You can finde them in {outputDir}. Press ENTER to close this window.");
+
+		if (eList.Count != 0) {
+			Console.WriteLine("We also had errors, the files will be appended to the output file: ");
+			saveFile.WriteLine("\nErrors:");
+			foreach (var item in eList) {
+				Console.WriteLine(item.Key);
+				Console.WriteLine($"In file: {item.Value}\n\n");
+				saveFile.WriteLine(item);
+			}
+		}
+		saveFile.Close();
 		Console.ReadLine();
 	}
 }
